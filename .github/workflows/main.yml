@@ -30,17 +30,19 @@ jobs:
         export LLVM=1
         export LLVM_IAS=1
         
-        # Bersihkan total build sebelumnya
+        # Bersihkan build
         make O=out mrproper
         
         # Konfigurasi
         make O=out vayu_defconfig
         
-        # Paksa nonaktifkan fitur yang sering bikin error di compiler modern
+        # Bypass error dtc dan stack protector
         ./scripts/config --file out/.config --disable CONFIG_CC_STACKPROTECTOR_STRONG
         ./scripts/config --file out/.config --enable CONFIG_CC_STACKPROTECTOR_NONE
         
-        # Build
+        # Flags tambahan untuk bypass error tipe data di compiler baru
+        export KCFLAGS="-Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=misleading-indentation"
+        
         make O=out -j$(nproc --all)
 
     - name: Bungkus Jadi Zip
@@ -54,4 +56,3 @@ jobs:
       with:
         name: Kernel-CAF-PocoX3Pro
         path: Anymore-CAF-Vayu-KSU.zip
-        
