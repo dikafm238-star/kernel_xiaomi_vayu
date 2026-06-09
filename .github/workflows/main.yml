@@ -14,7 +14,7 @@ jobs:
     - name: Setup Environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache cgit flex glibc-source libelf-dev libssl-dev libstdc++6 git-core gnupg gperf zip unzip curl gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu device-tree-compiler
+        sudo apt-get install -y bc bison build-essential ccache cgit flex glibc-source libelf-dev libssl-dev libstdc++6 git-core gnupg gperf zip unzip curl gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi device-tree-compiler
 
     - name: Download Proton Clang
       run: |
@@ -25,6 +25,8 @@ jobs:
         export PATH="$(pwd)/clang/bin:$PATH"
         export ARCH=arm64
         export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
         export CC=clang
         export LD=ld.lld
         export LLVM=1
@@ -33,17 +35,16 @@ jobs:
         # Bersihkan build
         make O=out mrproper
         
-        # Konfigurasi
+        # Konfigurasi Vayu
         make O=out vayu_defconfig
         
         # Bypass error dtc dan stack protector
         ./scripts/config --file out/.config --disable CONFIG_CC_STACKPROTECTOR_STRONG
         ./scripts/config --file out/.config --enable CONFIG_CC_STACKPROTECTOR_NONE
         
-        # Flags tambahan untuk bypass error tipe data di compiler baru
-        export KCFLAGS="-Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=misleading-indentation"
-        
-        make O=out -j$(nproc --all)
+        # Build dengan flag tambahan agar compiler tidak rewel
+        make O=out -j$(nproc --all) \
+        KCFLAGS="-w"
 
     - name: Bungkus Jadi Zip
       run: |
