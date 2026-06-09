@@ -30,10 +30,14 @@ jobs:
         export LLVM=1
         export LLVM_IAS=1
         
-        # Bersihin sisa build lama
+        # Bersihkan build sebelumnya
         make O=out mrproper
         
+        # Buat konfigurasi dan nonaktifkan stack protector yang bermasalah
         make O=out vayu_defconfig
+        scripts/config --file out/.config --disable CONFIG_CC_STACKPROTECTOR_STRONG
+        scripts/config --file out/.config --enable CONFIG_CC_STACKPROTECTOR_NONE
+        
         make O=out -j$(nproc --all)
 
     - name: Bungkus Jadi Zip
@@ -47,3 +51,10 @@ jobs:
       with:
         name: Kernel-CAF-PocoX3Pro
         path: Anymore-CAF-Vayu-KSU.zip
+
+
+
+
+
+
+
