@@ -14,7 +14,7 @@ jobs:
     - name: Setup Environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache cgit flex glibc-source libelf-dev libssl-dev libstdc++6 git-core gnupg gperf zip unzip curl
+        sudo apt-get install -y bc bison build-essential ccache cgit flex glibc-source libelf-dev libssl-dev libstdc++6 git-core gnupg gperf zip unzip curl gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu device-tree-compiler
 
     - name: Download Proton Clang
       run: |
@@ -30,20 +30,23 @@ jobs:
         export LLVM=1
         export LLVM_IAS=1
         
-        # Bersihkan build sebelumnya
+        # Bersihkan total build sebelumnya
         make O=out mrproper
         
-        # Buat konfigurasi dan nonaktifkan stack protector yang bermasalah
+        # Konfigurasi
         make O=out vayu_defconfig
-        scripts/config --file out/.config --disable CONFIG_CC_STACKPROTECTOR_STRONG
-        scripts/config --file out/.config --enable CONFIG_CC_STACKPROTECTOR_NONE
         
+        # Paksa nonaktifkan fitur yang sering bikin error di compiler modern
+        ./scripts/config --file out/.config --disable CONFIG_CC_STACKPROTECTOR_STRONG
+        ./scripts/config --file out/.config --enable CONFIG_CC_STACKPROTECTOR_NONE
+        
+        # Build
         make O=out -j$(nproc --all)
 
     - name: Bungkus Jadi Zip
       run: |
         cd anykernel
-        cp ../out/arch/arm64/boot/Image.gz-dtb .
+        cp ../out/arch/arm64/boot/Image.gz-dtb . || cp ../out/arch/arm64/boot/Image .
         zip -r9 ../Anymore-CAF-Vayu-KSU.zip *
 
     - name: Upload Artifact
@@ -51,10 +54,4 @@ jobs:
       with:
         name: Kernel-CAF-PocoX3Pro
         path: Anymore-CAF-Vayu-KSU.zip
-
-
-
-
-
-
-
+        
