@@ -1,0 +1,46 @@
+name: Build Kernel CAF Vayu
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v3
+      with:
+        ref: SalamandersKSU
+
+    - name: Setup Environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache cgit flex glibc-source libelf-dev libssl-dev libstdc++6 git-core gnupg gperf zip unzip curl
+
+    - name: Download Clang Compiler
+      run: |
+        mkdir clang
+        cd clang
+        curl -LO "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r416183b.tar.gz"
+        tar -xf clang-r416183b.tar.gz
+
+    - name: Mulai Compile Kernel
+      run: |
+        export PATH="$(pwd)/clang/bin:$PATH"
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export CC=clang
+        make O=out vayu_defconfig
+        make O=out -j$(nproc --all)
+
+    - name: Bungkus Jadi Zip Siap Flash
+      run: |
+        cd anykernel
+        cp ../out/arch/arm64/boot/Image.gz-dtb .
+        zip -r9 ../Anymore-CAF-Vayu-KSU.zip *
+
+    - name: Upload File Kernel Lo
+      uses: actions/upload-artifact@v3
+      with:
+        name: Kernel-CAF-PocoX3Pro
+        path: Anymore-CAF-Vayu-KSU.zip
