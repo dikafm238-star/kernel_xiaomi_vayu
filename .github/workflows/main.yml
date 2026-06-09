@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout Source Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
-        ref: SalamandersKSU
+        ref: caf
 
     - name: Setup Environment
       run: |
@@ -40,7 +40,7 @@ jobs:
         zip -r9 ../Anymore-CAF-Vayu-KSU.zip *
 
     - name: Upload File Kernel Lo
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Kernel-CAF-PocoX3Pro
         path: Anymore-CAF-Vayu-KSU.zip
