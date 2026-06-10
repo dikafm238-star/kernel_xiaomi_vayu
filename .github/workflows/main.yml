@@ -5,33 +5,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/aosp-clang/aosp-clang:latest
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
       with:
         ref: caf
 
-    - name: Compile
+    - name: Install Dependensi
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential flex libelf-dev libssl-dev git-core zip unzip curl gcc-aarch64-linux-gnu
+
+    - name: Compile Kernel
       run: |
         export ARCH=arm64
-        export SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
-        export CC=clang
-        export LLVM=1
-        
         make O=out vayu_defconfig
         make O=out -j$(nproc)
 
-    - name: Package
+    - name: Package & Upload
       run: |
         git clone https://github.com/osm0sis/AnyKernel3 --depth=1
+        # Menggunakan wildcard untuk menangkap file Image hasil build
         find out/arch/arm64/boot/ -name "Image*" -exec cp {} AnyKernel3/ \;
         cd AnyKernel3
         zip -r9 ../kernel-vayu.zip *
-
-    - name: Upload
+        
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Hasil-Kernel-Final
