@@ -4,34 +4,35 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/aosp-clang/aosp-clang:latest
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
       with:
         ref: caf
 
-    - name: Setup Environment
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache cgit flex glibc-source libelf-dev libssl-dev libstdc++6 git-core gnupg gperf zip unzip curl gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-
-    - name: Build Kernel
+    - name: Compile
       run: |
         export ARCH=arm64
+        export SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
+        export CC=clang
+        export LLVM=1
+        
         make O=out vayu_defconfig
         make O=out -j$(nproc)
 
     - name: Package
       run: |
         git clone https://github.com/osm0sis/AnyKernel3 --depth=1
-        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        find out/arch/arm64/boot/ -name "Image*" -exec cp {} AnyKernel3/ \;
         cd AnyKernel3
         zip -r9 ../kernel-vayu.zip *
 
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: Hasil-Kernel
+        name: Hasil-Kernel-Final
         path: kernel-vayu.zip
